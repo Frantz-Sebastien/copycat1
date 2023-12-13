@@ -1,10 +1,10 @@
-import {OpenAIApi, Configuration} from "openai";
+import { OpenAI } from "openai";
 
-const configuration = new Configuration({
+
+const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-})
-
-const openai = new OpenAIApi(configuration);
+    dangerouslyAllowBrowser: true
+});
 
 let messageHistory = [
     {
@@ -33,17 +33,17 @@ let messageHistory = [
 
 const chat = async (prompt) => {
     messageHistory.push({ role: "user", content: prompt});
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
         model : "gpt-3.5-turbo",
         messages: messageHistory,
     })
 
     messageHistory.push({ 
         role: "assistant", 
-        content: response.data.choices[0].message.content 
+        content: response.choices[0].message.content 
     });
 
-    const imageResponse = await openai.createImage({
+    const imageResponse = await openai.images.generate({
         prompt:  "photorealistic, digital painting, concept art, octane render, wide lens, 3D render, cinematic lighting, trending on ArtStation, trending on CGSociety, hyper realist, photo, natural light, film grain " +
         prompt,
         n: 1,
@@ -51,8 +51,8 @@ const chat = async (prompt) => {
     })
     const imageUrl = imageResponse.data.data[0].url;
 
-    let options = extractOptions(response.data.choices[0].message.content);
-    const fullStory = response.data.choices[0].message.content;
+    let options = extractOptions(response.choices[0].message.content);
+    const fullStory = response.choices[0].message.content;
     let story = removeOptionsFromStory(fullStory);
 
     return {
